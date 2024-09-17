@@ -1,6 +1,6 @@
 # Broker API : Overview
 
-SAR1 is a Java package geared to allow tasks communicating each others locally. A ``Broker``, instantiated from the main thread, connects and accepts connection requests from other brokers through a dedicated connection port (80 by default). This object establishes connections between tasks. A ``Channel`` is a stream that stores the messages sent by tasks into a circular FIFO lossless buffer. This object is created whenever two brokers are connected each others. A ``Task`` is a runnable object that can be connected to an other one via the main instiated ``Broker``. A task can send messages to multiple other tasks because it can read from the channel as many bytes as the program wills to, from whomever send them.
+SAR is a Java package geared to allow tasks communicating each others locally. A ``Broker``, instantiated from the main thread, connects and accepts connection requests from other brokers through a dedicated connection port (80 by default). This object establishes connections between tasks. A ``Channel`` is a stream that stores the messages sent by tasks into a circular FIFO lossless buffer. This object is created whenever two brokers are connected each others. A ``Task`` is a runnable object that can be connected to an other one via an instiated ``Broker``. A task can send messages to multiple other tasks because it can read from the channel as many bytes as the program wills to, from whomever send them.
 
 ## How to use it ?
 
@@ -30,11 +30,13 @@ Task t1 = new Task(b, new Runnable(){
 });
 ```
 
+The above program uses the same broker to both connect and accept a connection from itself, which is allowed since a broker is not identified by its only name. You can also create two brokers, one which connects to the other one. The most important object to consider is the channel instance returned by the connect/accept broker's method because the channel instance must be unique in the establishment of a link between 2 or more tasks. In the above code, there is no need to save the returned channel instance in a dedicated pointer variable since it is only used to read/write 5 pure bytes from the buffer.
+
 ## How to *not* use it ?
 
 The channel methods are exclusive to prevent messages from being mixed each others such that it cannot be restored when reading bytes. Therefore, mind yourself while overloading channels with huge amounts of data because it might block future tasks trying to read next bytes.
 
-One machine implies one unique port number for one broker. You can not allow both "Toto:80" and "Titi:80" brokers on the same machine.
+Working locally on a single machine implies one unique port number for one broker. You must not allow both "Toto:80" and "Titi:80" brokers on the same machine.
 
 ### Channel methods
 

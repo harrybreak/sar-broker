@@ -17,7 +17,6 @@ public class TestMain {
      * 
      * - Last five bytes from ``data_sent`` array are sent into last five memory spaces of ``data_received`` in the same order.
      */
-	@SuppressWarnings("unused")
     public static void main(String[] args) {
 
         Broker b = new Broker("Broker");
@@ -39,12 +38,18 @@ public class TestMain {
             }
         });
 
-        // if (data_received[0] != data_sent[0] && // While sending data, offset=1 so first byte is not concerned about this data exchange
-        //     data_received[1] == data_sent[1] && // While receiving data, offset=1
-        //     data_received[2] == data_sent[2])
-        //     System.out.println("Test succeed !");
-        // else
-        //     System.out.println("Test failed...");
+	     if (data_received[0] != data_sent[0] && // While sending data, offset=1 so first byte is not concerned about this data exchange
+	         data_received[1] == data_sent[1] && // While receiving data, offset=1
+	         data_received[2] == data_sent[2])
+	         System.out.println("Test succeed !");
+	     else
+	         System.out.println("Test failed...");
 
+        try {
+			t1.join();
+	        t2.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
     }
 }

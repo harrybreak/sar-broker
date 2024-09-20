@@ -86,7 +86,7 @@ The rationale is that a loop trying to read a given length, looping over until a
 The end of stream is the same as being as the channel being disconnected, so the method will throw an exception (DisconnectedException). 
 
 Note: notice that the disconnected exception does not always indicate an error, rarely in fact. The end of stream is an exceptional situation, but it is not an error. Remember that exceptions are not only for errors, but for exceptional situations, hence their name.
-The disconnected exception may give some extra information regarding an error if an internal error caused the channel to disconnect.   
+The disconnected exception may give some extra information regarding an error if an internal error caused the channel to disconnect.
 
 # Disconnecting
 

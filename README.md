@@ -1,10 +1,10 @@
 # Broker API : Overview
 
-SAR is a Java package geared to allow tasks communicating each others locally. A ``Broker``, instantiated from the main thread, connects and accepts connection requests from other brokers through a dedicated connection port (80 by default). This object establishes connections between tasks. A ``Channel`` is a stream that stores the messages sent by tasks into a circular FIFO lossless buffer. This object is created whenever two brokers are connected each others. A ``Task`` is a runnable object that can be connected to an other one via an instiated ``Broker``. A task can send messages to multiple other tasks because it can read from the channel as many bytes as the program wills to, from whomever send them.
+SAR is a Java package geared to allow tasks communicating each others locally with Broker/Channel design. A ``Broker`` connects and accepts connection requests from other brokers through a dedicated connection port (80 by default). This object establishes connections between tasks. A ``Channel`` is a stream that stores the messages sent by tasks into a circular FIFO lossless buffer. This object is created whenever two brokers are connected each others. A ``Task`` is a runnable object that can be connected to an other one via an instiated ``Broker``. A task can send messages to multiple other tasks because it can read from the channel as many bytes as the program wills to, from whomever send them.
 
 ## How to use it ?
 
-Create one instance of ``Broker`` for each peer connection you want to have. This broker must have an unique name to be identified by tasks, and, most important, **an unique port number!**.
+Create one instance of ``Broker``. This broker must have an unique name to be identified by tasks, and, most important, **an unique port number!**.
 
 Create as many ``Task``s as you want with the broker.
 

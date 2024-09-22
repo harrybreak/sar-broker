@@ -2,10 +2,22 @@ package sar;
 
 public class Channel {
 
+	boolean disconnected;
     CircularBuffer buffer;
+    public static int readingThreads = 0;
+    public static final int MAXSIZE = 1024;
+    
+    Channel() {
+    	this.disconnected = false;
+    	this.buffer = new CircularBuffer(MAXSIZE);
+    }
 
-    int read(byte bytes[], int offset, int length) {
-        // MAKE THIS EXCLUSIVE
+    int read(byte bytes[], int offset, int length) throws DisconnectChannelException {
+    	
+    	if (this.disconnected)
+    		throw new DisconnectChannelException("Reading on a disconnected channel !");
+    	
+    	Channel.readingThreads += 1;
         int total_read = 0;
 
         try {
@@ -15,24 +27,25 @@ public class Channel {
         } catch (IllegalStateException e) {
             e.printStackTrace();
         }
-        return total_read;
-    }
-
-    int write(byte bytes[], int offset, int length) {
-        // MAKE THIS EXCLUSIVE
-        int total_sent = 0;
-
+        
         try {
-            for (; total_sent < length; total_sent++) {
-                buffer.push(bytes[offset + total_sent]);
-            }
-        } catch (IllegalStateException e) {
-            e.printStackTrace();
+        	return total_read;
+        } finally {
+        	Channel.readingThreads -= 1;
         }
-        return total_sent;
     }
 
-    // METHODS TO IMPLEMENT
-    void disconnect() {}
-    boolean disconnected() { return false; }
+    int write(byte bytes[], int offset, int length) throws NotYetImplementedException {
+        // MAKE THIS EXCLUSIVE
+    	throw new NotYetImplementedException("");
+    }
+
+    void disconnect() {
+    	while (Channel.readingThreads > 0);
+    	this.disconnected = true;
+    }
+    
+    boolean disconnected() {
+    	return this.disconnected;
+    }
 }

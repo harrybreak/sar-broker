@@ -7,6 +7,7 @@ bin/
 
 # Media and binary files
 *.pdf
+!DESIGN.pdf
 *.png
 *.gif
 *.3gp

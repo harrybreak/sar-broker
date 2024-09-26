@@ -1,50 +1,53 @@
 package sar;
 
 public class CircularBuffer {
-    int m_capacity;
-    int m_start, m_end;
-    byte m_elements[];
+    volatile int m_tail, m_head;
+    volatile byte m_bytes[];
 
     public CircularBuffer(int capacity) {
-        m_capacity = capacity;
-        m_elements = new byte[capacity];
-        m_start = m_end = 0;
-    }
-
-    public boolean full() {
-        int next = (m_end + 1) % m_capacity;
-        return (next == m_start);
-    }
-
-    public boolean empty() {
-        return (m_start == m_end);
+        m_bytes = new byte[capacity];
+        m_tail = m_head = 0;
     }
 
     /**
-     * Pushes a byte in the buffer, if the buffer is not full,
-     * throws an IllegalStateException otherwise.
-     *
-     * @return true if the push succeeded.
+     * @return true if this buffer is full, false otherwise
      */
-    public void push(byte elem) {
-        int next = (m_end + 1) % m_capacity;
-        if (next == m_start)
-            throw new IllegalStateException("Full");
-        m_elements[m_end] = elem;
-        m_end = next;
+    public boolean full() {
+        int next = (m_head + 1) % m_bytes.length;
+        return (next == m_tail);
     }
 
     /**
-     * @return the next available byte, if the buffer is not empty,
-     *         throws an IllegalStateException otherwise. 
+     * @return true if this buffer is empty, false otherwise
+     */
+    public boolean empty() {
+        return (m_tail == m_head);
+    }
+
+    /**
+     * @param b: the byte to push in the buffer
+     * @return the next available byte
+     * @throws an IllegalStateException if full.
+     */
+    public void push(byte b) {
+        int next = (m_head + 1) % m_bytes.length;
+        if (next == m_tail)
+            throw new IllegalStateException();
+        m_bytes[m_head] = b;
+        m_head = next;
+    }
+
+    /**
+     * @return the next available byte
+     * @throws an IllegalStateException if empty.
      */
     public byte pull() {
-        if (m_start != m_end) {
-            int next = (m_start + 1) % m_capacity;
-            byte elem = m_elements[m_start];
-            m_start = next;
-            return elem;
-        }
-        throw new IllegalStateException("Empty");
+        if (m_tail == m_head)
+            throw new IllegalStateException();
+        int next = (m_tail + 1) % m_bytes.length;
+        byte bits = m_bytes[m_tail];
+        m_tail = next;
+        return bits;
     }
+
 }

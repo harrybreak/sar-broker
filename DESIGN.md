@@ -19,7 +19,7 @@ static Broker getBroker() {
 
 ## RendezVous (RdV) between two tasks
 
-An instance of ``RdV`` is created every broker's request a connection or an accept with an other broker. Every broker stores the broker requests it sent or received earlier that still waits for a right accepting broker request, in a ``RdVMap``'s instance. This instance handles with connect/accept requests and notifies the broker when a connection is ready to be established between two tasks via a ``Channel`` instance (see below how channels work):
+An instance of ``RdV`` is created every broker's request a connection or an accept with an other broker ahead. Every broker stores the broker requests it sent or received earlier that still waits for a right accepting broker request, in a ``RdVMap``'s instance. Each instance of RdV is uniquely identified by its port number. This instance handles with connect/accept requests and notifies the broker when a connection is ready to be established between two tasks via a ``Channel`` instance (see below how channels work):
 
 ![RendezVous](rdv.jpg)
 

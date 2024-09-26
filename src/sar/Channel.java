@@ -2,50 +2,56 @@ package sar;
 
 public class Channel {
 
+	int port;
 	boolean disconnected;
-    CircularBuffer buffer;
-    public static int readingThreads = 0;
-    public static final int MAXSIZE = 1024;
+	boolean dangling;
+	Channel remote;
+    CircularBuffer in, out;
+    public static final int MAXSIZE = 8;
     
-    Channel() {
+    Channel(int port) {
+    	
+    	this.port = port;
     	this.disconnected = false;
-    	this.buffer = new CircularBuffer(MAXSIZE);
+    	this.dangling = true; // Set to true unless remote channel is no longer null
+    	this.in = new CircularBuffer(MAXSIZE);
+    	this.out = null;
+    	this.remote = null;
+    	
+    }
+    
+    void plug(Channel c) throws DisconnectChannelException {
+    	
+    	if (c.disconnected()) {
+    		// This shall never occur
+    		throw new DisconnectChannelException("Channel cannot be plugged to a disconnected channel!");
+    	}
+    	
+    	this.remote = c;
+    	this.out = c.in;
+    	
+    	this.dangling = false;
+    	c.dangling = false;
+    	
     }
 
-    int read(byte bytes[], int offset, int length) throws DisconnectChannelException {
+    public int read(byte bytes[], int offset, int length) throws DisconnectChannelException {
     	
     	if (this.disconnected)
-    		throw new DisconnectChannelException("Reading on a disconnected channel !");
-    	
-    	Channel.readingThreads += 1;
-        int total_read = 0;
-
-        try {
-            for (; total_read < length; total_read++) {
-                bytes[offset + total_read] = buffer.pull();
-            }
-        } catch (IllegalStateException e) {
-            e.printStackTrace();
-        }
-        
-        try {
-        	return total_read;
-        } finally {
-        	Channel.readingThreads -= 1;
-        }
+    		throw new DisconnectChannelException("Reading from a disconnected channel !");
+    
+    	return 0;
     }
 
-    int write(byte bytes[], int offset, int length) throws NotYetImplementedException {
+    public int write(byte bytes[], int offset, int length) throws NotYetImplementedException {
         // MAKE THIS EXCLUSIVE
     	throw new NotYetImplementedException("");
     }
 
-    void disconnect() {
-    	while (Channel.readingThreads > 0);
-    	this.disconnected = true;
+    public void disconnect() {
     }
     
-    boolean disconnected() {
+    public boolean disconnected() {
     	return this.disconnected;
     }
 }

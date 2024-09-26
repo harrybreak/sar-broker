@@ -18,7 +18,7 @@ public class TestMain {
      * - Last five bytes from ``data_sent`` array are sent into last five memory spaces of ``data_received`` in the same order.
      */
 	@SuppressWarnings("unused")
-    public static void main(String[] args) {
+    public static void main(String[] args) throws NotYetImplementedException {
 
         Broker b = new Broker("Broker");
 
@@ -28,23 +28,33 @@ public class TestMain {
         Task t2 = new Task(b, new Runnable(){
             @Override
             public void run() {
-                b.accept(80).read(data_received, 1, 5);
+                try {
+					b.accept(80).read(data_received, 1, 5);
+				} catch (DisconnectChannelException e) {
+					e.printStackTrace();
+				}
             }
         });
 
         Task t1 = new Task(b, new Runnable(){
             @Override
             public void run() {
-                b.connect("Broker", 80).write(data_sent, 1, 5);
+                try {
+					b.connect("Broker", 80).write(data_sent, 1, 5);
+				} catch (NotYetImplementedException e) {
+					e.printStackTrace();
+				} catch (NotFoundBrokerException e) {
+					e.printStackTrace();
+				}
             }
         });
 
-        // if (data_received[0] != data_sent[0] && // While sending data, offset=1 so first byte is not concerned about this data exchange
-        //     data_received[1] == data_sent[1] && // While receiving data, offset=1
-        //     data_received[2] == data_sent[2])
-        //     System.out.println("Test succeed !");
-        // else
-        //     System.out.println("Test failed...");
+         if (data_received[0] != data_sent[0] && // While sending data, offset=1 so first byte is not concerned about this data exchange
+             data_received[1] == data_sent[1] && // While receiving data, offset=1
+             data_received[2] == data_sent[2])
+             System.out.println("Test succeed !");
+         else
+             System.out.println("Test failed...");
 
     }
 }

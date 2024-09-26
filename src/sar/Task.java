@@ -1,23 +1,16 @@
 package sar;
 
 public class Task extends Thread {
-    Broker broker;
-    Runnable exec;
+	
+    Broker brokerRef;
+    Runnable exeCore;
     
     Task(Broker b, Runnable r) {
-        this.broker = b;
-        this.exec = r;
+        this.brokerRef = b;
+        this.exeCore = r;
     }
 
-    Broker getBroker() {
-        return this.broker;
-    }
-    
-    Channel connect(String name, int port) {
-    	return null;
-    }
-    
-    Channel accept(int port) {
-    	return null;
+    synchronized static Broker getBroker() {
+        return ((Task)(Thread.currentThread())).brokerRef;
     }
 }

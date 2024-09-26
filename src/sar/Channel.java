@@ -35,12 +35,9 @@ public class Channel {
     	
     }
 
-    public int read(byte bytes[], int offset, int length) throws DisconnectChannelException {
-    	
-    	if (this.disconnected)
-    		throw new DisconnectChannelException("Reading from a disconnected channel !");
-    
-    	return 0;
+    public int read(byte bytes[], int offset, int length) throws NotYetImplementedException {
+        // MAKE THIS EXCLUSIVE
+    	throw new NotYetImplementedException("");
     }
 
     public int write(byte bytes[], int offset, int length) throws NotYetImplementedException {

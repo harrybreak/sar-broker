@@ -46,7 +46,7 @@ public class Channel {
     	
     	while (i < offset + length) {
     		
-    		synchronized (this.out) {
+    		synchronized (this) {
     			
         		while (i == offset && this.out.empty()) {
             		
@@ -63,7 +63,7 @@ public class Channel {
         		}
     		}
     		
-    		synchronized (this.out) {
+    		synchronized (this) {
     			
     	    	if (this.disconnected) {
     	    		
@@ -96,7 +96,7 @@ public class Channel {
     	
     	while (i < offset + length) {
     		
-    		synchronized (this.in) {
+    		synchronized (this) {
     			
         		while (i == offset && this.in.full()) {
             		
@@ -118,7 +118,7 @@ public class Channel {
         		}
     		}
     		
-    		synchronized (this.in) {
+    		synchronized (this) {
         		
         		if (this.dangling || this.remote.disconnected) {
         			

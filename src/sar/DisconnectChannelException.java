@@ -1,10 +1,11 @@
 package sar;
 
-public class DisconnectChannelException extends Exception {
+public class DisconnectChannelException extends IllegalStateException {
 
-	private static final long serialVersionUID = 0L;
+	private static final long serialVersionUID = 1L;
 	
 	public DisconnectChannelException(String errorMsg) {
+		
 		super(errorMsg);
 	}
 

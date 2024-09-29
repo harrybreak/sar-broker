@@ -2,15 +2,39 @@ package sar;
 
 public class Task extends Thread {
 	
+	QueueBroker qbRef;
     Broker brokerRef;
+    
     Runnable exeCore;
     
-    Task(Broker b, Runnable r) {
+    public Task(Broker b, Runnable r) {
+    	
         this.brokerRef = b;
+        this.qbRef = null;
+        
         this.exeCore = r;
     }
+    
+    public Task(QueueBroker qb, Runnable r) {
+    	
+    	this.brokerRef = qb.b;
+    	this.qbRef = qb;
+    	
+    	this.exeCore = r;
+    }
+    
+    synchronized public static Task getTask() {
+    	
+    	return (Task)Thread.currentThread();
+    }
 
-    synchronized static Broker getBroker() {
+    synchronized public static Broker getBroker() {
+    	
         return ((Task)(Thread.currentThread())).brokerRef;
+    }
+    
+    synchronized public static QueueBroker getQueueBroker() {
+    	
+    	return ((Task)(Thread.currentThread())).qbRef;
     }
 }

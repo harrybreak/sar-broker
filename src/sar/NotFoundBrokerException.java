@@ -1,10 +1,11 @@
 package sar;
 
-public class NotFoundBrokerException extends Exception {
+public class NotFoundBrokerException extends IllegalStateException {
 
-	private static final long serialVersionUID = 0L;
+	private static final long serialVersionUID = 1L;
 	
-	NotFoundBrokerException(String errorMsg) {
+	public NotFoundBrokerException(String errorMsg) {
+		
 		super(errorMsg);
 	}
 

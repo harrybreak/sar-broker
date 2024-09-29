@@ -8,6 +8,7 @@ bin/
 # Media and binary files
 *.pdf
 !DESIGN.pdf
+!QUEUE.pdf
 *.png
 *.gif
 *.3gp

@@ -32,7 +32,7 @@ When connecting, we may want to distinguish between two cases:
 When the named ``QueueBroker`` does not exist, the connect returns null. Otherwise, the connect waits until there is a matching accept so that a channel can be
 constructed and returned. 
 
-*Note: we could consider introducing a timeout here, limiting the wait for the rendez-vous to happen.*
+*Note: we could consider introducing a timeout here, limiting the wait for the rendezvous to happen.*
 
 ### Sending messages on queues
 > Signature: ``MessageQueue::send(byte[] bytes, int offset, int length) -> void``
@@ -81,4 +81,21 @@ then hanging up.
 
 Second, dropping written bytes may seem wrong but it is just leveraging an unavoidable truth: written bytes may be dropped even though queues are FIFO and lossless. Indeed, it is not at all different than if the bytes were written before the other side disconnected a ``MessageQueue`` without reading all pending bytes. In both cases, the bytes would be dropped.
 
-Nota Bene: one should resist the temptation to adopt an immediate synchronous disconnection. Indeed, it would not be possible if our queues would not be implemented over shared memory. Disconnecting would imply sending a control message to inform the other side and thus the disconnect protocol would be asynchronous.
+## Design (on Broker/Channel primitive API)
+
+### Connecting via QueueBroker
+
+A ``QueueBroker`` asks its ``Broker`` to seek for the adequate remote ``QueueBroker`` to establish a connection between two tasks. The connection is blocking unless the adequate remote ``MessageQueue`` is returned to the task (when the remote ``QueueBroker`` accepts the connection) or it is known that the wanted remote broker does not exist.
+
+*Note: we could consider introducing a timeout here, limiting the wait for the rendezvous to happen.*
+
+Once the connection is establish, each task receives its corresponding ``MessageQueue``. A ``MessageQueue`` contains two ``CircularBufferQueue``. One of them is considered as "Input Stream" for one of the tasks and as "Output Stream" for the other task", and vice-versa.
+
+A ``CircularBufferQueue`` stores entire messages with a fixed size. The ``pull`` method returns the first entire message put in the buffer and remove all its content from the buffer. This method returns ``null`` in case the ``CircularBufferQueue`` is empty. The ``push`` method attempts to put the given message in the buffer and blocks the writing thread unless the buffer is not full anymore. It is possible to check the fulfillness of a buffer by calling method ``full()``:
+
+![Design](queue_design.jpg)
+
+### Reading, Writing and Disconnecting.
+
+As mentioned further above, writing or reading can be blocking. When a ``MessageQueue`` gets disconnected by any of both tasks, all writing threads gets interrupted and throw an ``DisconnectQueueException``, whereas all current reading threads finish to read data from the ``CircularBufferQueue``. However, it is impossible to read from an already disconnected ``MessageQueue``, this raises an ``DisconnectQueueException``.
+

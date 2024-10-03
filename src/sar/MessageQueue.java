@@ -1,17 +1,27 @@
 package sar;
 
-public class MessageQueue {
+abstract class MessageQueue {
 	
 	boolean closed;
-
-	MessageQueue() { this.closed = false; }
 	
-	public void send(byte[] bytes, int offset, int length) {}
+	interface Listener {
+		void received(byte[] msg);
+		void sent(Message msg);
+		void closed();
+	}
 	
-	public byte[] receive() { return null; }
+	Listener l;
 	
-	public void close() { this.closed = true; }
+	void setListener(Listener l) { this.l = l; }
 	
-	public boolean closed() { return this.closed; }
+	boolean send(Message msg) {
+		// Process ...
+		
+		this.l.sent(msg);
+		
+		return false;
+	}
 	
+	void close() {}
+	boolean closed() { return this.closed; }
 }

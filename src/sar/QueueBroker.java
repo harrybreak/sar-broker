@@ -1,15 +1,31 @@
 package sar;
 
-public class QueueBroker {
+abstract class QueueBroker {
 	
 	Broker b;
+	String name;
 	
-	public QueueBroker(Broker broker) { this.b = broker; }
+	QueueBroker(String name) {
+		this.name = name;
+	}
 	
-	public String name() { return this.b.getName(); }
+	interface AcceptListener {
+		void accepted(MessageQueue queue);
+	};
 	
-	public MessageQueue accept(int port) { return null; }
+	boolean bind(int port, AcceptListener listener) {
+		return false;
+	}
+	boolean unbind(int port) {
+		return false;
+	}
 	
-	public MessageQueue connect(String name, int port) { return null; }
-
+	interface ConnectListener {
+		void connected(MessageQueue queue);
+		void refused();
+	};
+	
+	boolean connect(String name, int port, ConnectListener listener) {
+		return false;
+	}
 }

@@ -40,7 +40,7 @@ Task.getQueueBroker().bind(PORT, l);
 
 When you have waited a little too long and want to cancel a earlier binding request on a certain port number, you can call the method ``unbind`` to cancel any binding request you sent earlier on the same broker.
 
-### Sending a message in a bottle
+### Connecting
 > Signature: ``boolean connect(String name, int port, ConnectListener listener)``
 
 First, you have to create a listener geared to listen to connecting incoming brokers:
@@ -52,7 +52,7 @@ void refused();
 };
 ```
 
-This listener can send two different signals: ``connected`` and ``refused``. The second signal is invoked when the remote broker is neither available nor disconnected. The first signal returns back a ``MessageQueue`` used to establish the peer-to-peer connnection with the other remote ``MessageQueue``. To reach this, you have to pass an instance of ``ConnectListener`` into the ``connect`` method from your task's broker.
+This listener can send two different signals: ``connected`` and ``refused``. The second signal is invoked when the remote broker is neither available nor connected. The first signal returns back a ``MessageQueue`` used to establish the peer-to-peer connnection with the other remote ``MessageQueue``. To reach this, you have to pass an instance of ``ConnectListener`` into the ``connect`` method from your task's broker.
 
 ## Design
 

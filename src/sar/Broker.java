@@ -8,11 +8,14 @@ public class Broker {
     HashMap<Integer, RdV> accepts;
 
     Broker(String name) {
+    	
         this.name = name;
+        this.accepts = new HashMap<Integer, RdV>();
         BrokerManager.getSelf().add(this);
     }
     
     String getName() {
+    	
     	return this.name;
     }
 

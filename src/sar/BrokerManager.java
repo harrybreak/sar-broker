@@ -15,10 +15,12 @@ public class BrokerManager {
 	HashMap<String, Broker> brokers;
 	
 	private BrokerManager() {
+		
 		brokers = new HashMap<String, Broker>();
 	}
 	
 	public synchronized void add(Broker broker) {
+		
 		String name = broker.getName();
 		Broker b = brokers.get(name);
 		if (b != null) throw new IllegalStateException("Broker " + name + " already exists!");
@@ -26,15 +28,18 @@ public class BrokerManager {
 	}
 	
 	public synchronized void remove(Broker broker) {
+		
 		String name = broker.getName();
 		brokers.remove(name);
 	}
 	
 	public synchronized Broker get(String name) {
+		
 		return brokers.get(name);
 	}
 	
 	public int size() {
+		
 		return brokers.size();
 	}
 	

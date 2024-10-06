@@ -7,6 +7,9 @@ public class Task extends Thread {
     
     Runnable exeCore;
     
+    @Override
+    public void run() { this.exeCore.run(); }
+    
     public Task(Broker b, Runnable r) {
     	
         this.brokerRef = b;

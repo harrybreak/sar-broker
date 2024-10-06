@@ -22,6 +22,7 @@ public class RdV {
 		this.acceptChannel = new Channel(port);
 		
 		this.acceptChannel.plug(this.connectChannel);
+		this.connectChannel.plug(this.acceptChannel);
 		
 		return this.acceptChannel;
 		

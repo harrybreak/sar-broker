@@ -7,7 +7,8 @@ public class Channel {
 	boolean dangling;
 	Channel remote;
     CircularBuffer in, out;
-    public static final int MAXSIZE = 4;
+    public static final int MAXSIZE = 5;
+    
     
     Channel(int port) {
     	
@@ -18,6 +19,29 @@ public class Channel {
     	this.out = null;
     	this.remote = null;
     	
+    }
+    
+    
+    void checkLandRConnection() throws DisconnectChannelException {
+    	
+    	if (this.disconnected) {
+    		
+    		throw new DisconnectChannelException("Current channel is disconnected!");
+    	}
+    	
+		if (this.dangling || this.remote.disconnected) {
+			
+			throw new DisconnectChannelException("Remote channel is disconnected!");
+		}
+    }
+    
+    
+    void checkLConnection() throws DisconnectChannelException {
+    	
+    	if (this.disconnected) {
+    		
+    		throw new DisconnectChannelException("Current channel is disconnected!");
+    	}
     }
     
     void plug(Channel c) throws DisconnectChannelException {
@@ -31,44 +55,31 @@ public class Channel {
     	this.out = c.in;
     	
     	this.dangling = false;
-    	c.dangling = false;
     	
     }
 
     public int read(byte bytes[], int offset, int length) throws DisconnectChannelException {
     	
-    	if (this.disconnected) {
-    		
-    		throw new DisconnectChannelException("Current channel is disconnected!");
-    	}
+    	this.checkLConnection(); // Raises an exception if the channel is disconnected
         
     	int i = offset;
     	
-    	while (i < offset + length) {
+		while (this.out.empty()) {
     		
-    		synchronized (this) {
-    			
-        		while (i == offset && this.out.empty()) {
-            		
-            		if (this.disconnected) {
-            			
-            			throw new DisconnectChannelException("Current channel is disconnected!");
-            		}
-        			
-        			try {
-        				wait();
-        			} catch (InterruptedException e) {
-        				// Wait until first byte is available
-        			}
-        		}
-    		}
+			this.checkLConnection();
+			
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				// Wait until first byte is available
+			}
+		}
+    	
+    	synchronized (this) {
     		
-    		synchronized (this) {
+    		while (i < offset + length) {
     			
-    	    	if (this.disconnected) {
-    	    		
-    	    		throw new DisconnectChannelException("Current channel is disconnected!");
-    	    	}
+    			this.checkLConnection();
     			
         		if (i > offset && this.out.empty()) {
         			
@@ -87,48 +98,26 @@ public class Channel {
 
     public int write(byte bytes[], int offset, int length) throws DisconnectChannelException {
     	
-    	if (this.disconnected) {
-    		
-    		throw new DisconnectChannelException("Current channel is disconnected!");
-    	}
+    	this.checkLandRConnection();
         
     	int i = offset;
     	
-    	while (i < offset + length) {
+		while (i == offset && this.in.full()) {
     		
-    		synchronized (this) {
-    			
-        		while (i == offset && this.in.full()) {
-            		
-            		if (this.dangling || this.remote.disconnected) {
-            			
-            			throw new DisconnectChannelException("Remote channel is disconnected!");
-            		}
-        			
-                	if (this.disconnected) {
-                		
-                		throw new DisconnectChannelException("Current channel is disconnected!");
-                	}
-            		
-        			try {
-        				wait();
-        			} catch (InterruptedException e) {
-        				// Wait until last byte case is not busy anymore
-        			}
-        		}
-    		}
+			this.checkLandRConnection();
     		
-    		synchronized (this) {
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				// Wait until last byte case is not busy anymore
+			}
+		}
+    	
+    	synchronized (this) {
+    		
+    		while (i < offset + length) {
         		
-        		if (this.dangling || this.remote.disconnected) {
-        			
-        			throw new DisconnectChannelException("Remote channel is disconnected!");
-        		}
-    			
-            	if (this.disconnected) {
-            		
-            		throw new DisconnectChannelException("Current channel is disconnected!");
-            	}
+        		this.checkLandRConnection();
         		
         		if (i > offset && this.in.full()) {
         			

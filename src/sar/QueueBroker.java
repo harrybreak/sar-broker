@@ -4,12 +4,32 @@ public class QueueBroker {
 	
 	Broker b;
 	
-	public QueueBroker(Broker broker) { this.b = broker; }
+	public QueueBroker(String name) {
+		
+		this.b = new Broker(name);
+	}
 	
-	public String name() { return this.b.getName(); }
+	public QueueBroker(Broker broker) {
+		
+		this.b = broker;
+	}
 	
-	public MessageQueue accept(int port) { return null; }
+	public String name() {
+		
+		return this.b.getName();
+	}
 	
-	public MessageQueue connect(String name, int port) { return null; }
-
+	public MessageQueue accept(int port) {
+		
+		Channel c = this.b.accept(port);
+		
+		return new MessageQueue(c);
+	}
+	
+	public MessageQueue connect(String name, int port) {
+		
+		Channel c = this.b.connect(name, port);
+		
+		return new MessageQueue(c);
+	}
 }

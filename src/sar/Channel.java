@@ -7,7 +7,7 @@ public class Channel {
 	boolean dangling;
 	Channel remote;
     CircularBuffer in, out;
-    public static final int MAXSIZE = 5;
+    public static final int MAXSIZE = 5; // Leave 1 byte 
     
     
     Channel(int port) {

@@ -5,7 +5,7 @@ abstract class MessageQueue {
 	boolean closed;
 	
 	interface Listener {
-		void received(byte[] msg);
+		void received(Message msg);
 		void sent(Message msg);
 		void closed();
 	}

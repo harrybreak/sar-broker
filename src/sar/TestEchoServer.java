@@ -4,32 +4,57 @@ public class TestEchoServer extends Task {
 	
 	static class Execution implements Runnable {
 		
-		public Execution() {}
+		MessageQueue mq;
 		
+		public Execution() {
+			
+			this.mq = null;
+		}
 
 		@Override
 		public void run() throws DisconnectChannelException {
 
-			Broker b = Task.getBroker();
-			Channel c = b.accept(TestMain.PORT);
-			
-			byte data_received[] = {0,0,0,0,0,0};
-			
-			c.read(data_received, 0, 5);
-
-			System.out.println("Data received:");
-            for (int i = 0 ; i < 6 ; i++)
-           	 	System.out.printf("|%d|\n", data_received[i]);
+	        class AListener implements QueueBroker.AcceptListener {
+				@Override
+				public void accepted(MessageQueue queue) {
+					mq = queue;
+					System.out.println("I well received the connected queue");
+				}
+	        }
+	        
+	        // Create one instance of the accepting listener...
+	        AListener l = new AListener();
+	        // ... and send it to the QueueBroker
+	        Task.getQueueBroker().bind(TestMain.PORT, l);
+	         
+	        // ... Process ...
+	         
+	        class RWListener implements MessageQueue.Listener {
+				@Override
+				public void received(Message msg) {}
+				@Override
+				public void sent(Message msg) {
+					System.out.println("Message has been sent!");
+				}
+				@Override
+				public void closed() {}        	 
+	        }
+	         
+	        RWListener rwl = new RWListener();
+	         
+	        mq.setListener(rwl);
+	         
+	        mq.send(new Message(TestMain.data_sent));
 		}
 	}
 	
 
-	public TestEchoServer(Broker b, Runnable r) { super(b, r); }
+	public TestEchoServer(QueueBroker b, Runnable r) { super(b, r); }
 
 
 	public static void main(String args[]) throws InterruptedException {
         
-		Broker broker = new Broker("Server-Side");
+		QueueBroker broker = new QueueBroker("Server-Side");
 		TestEchoServer server = new TestEchoServer(broker, new Execution());
 		
 		server.start();

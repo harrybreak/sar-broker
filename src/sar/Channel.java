@@ -7,7 +7,7 @@ public class Channel {
 	boolean dangling;
 	Channel remote;
     CircularBuffer in, out;
-    public static final int MAXSIZE = 5; // Leave 1 byte 
+    public static final int MAXSIZE = 64; // Leave 1 byte 
     
     
     Channel(int port) {
@@ -65,14 +65,15 @@ public class Channel {
     	int i = offset;
     	
 		while (this.out.empty()) {
-    		
+			
 			this.checkLConnection();
 			
+			synchronized (this) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
 				// Wait until first byte is available
-			}
+			}}
 		}
     	
     	synchronized (this) {
@@ -106,11 +107,12 @@ public class Channel {
     		
 			this.checkLandRConnection();
     		
+			synchronized (this) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
 				// Wait until last byte case is not busy anymore
-			}
+			}}
 		}
     	
     	synchronized (this) {
@@ -120,14 +122,18 @@ public class Channel {
         		this.checkLandRConnection();
         		
         		if (i > offset && this.in.full()) {
-        			
+
+            		notifyAll(); // To unlock reading threads blocked due to emptiness
         			return i - offset;
         		}
         		
-        		this.in.push(bytes[i]);
-        		notifyAll(); // To unlock reading threads blocked due to emptiness
-        		
-        		i++;
+        		else {
+        			
+            		this.in.push(bytes[i]);
+            		notifyAll(); // To unlock reading threads blocked due to emptiness
+            		
+            		i++;
+        		}
     		}
     	}
     	

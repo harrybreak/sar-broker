@@ -5,8 +5,8 @@ public class TestMain {
 	public static final int PORT = 12345;
 	public static final String NAME = "Broker";
 
-	public static byte data_received[] = {0,0,0,0,0,0};
-	public static byte data_sent[] = {5,4,3,2,1,0};
+	public static byte data_received[] = null;
+	public static byte data_sent[] = {5,4,3,2,1};
 	
 	public static int nb_received = 0;
 	public static int nb_sent = 0;
@@ -29,16 +29,16 @@ public class TestMain {
 	 */
 	public static void main(String[] args) throws InterruptedException {
 
-		Broker b = new Broker(NAME);
-		Broker bis =new Broker("a");
+		QueueBroker b = new QueueBroker(NAME);
+		QueueBroker bis =new QueueBroker("a");
 
 		Task t2 = new Task(b, new Runnable() {
 			@Override
 			public void run() {
 				try {
-					Broker brokerRef = Task.getBroker();
-					Channel remote = brokerRef.accept(PORT);
-					TestMain.nb_received = remote.read(TestMain.data_received, 0, 5);
+					QueueBroker brokerRef = Task.getQueueBroker();
+					MessageQueue remote = brokerRef.accept(PORT);
+					TestMain.data_received = remote.receive();
 				} catch (DisconnectChannelException e) {
 					e.printStackTrace();
 				}
@@ -49,9 +49,9 @@ public class TestMain {
 			@Override
 			public void run() {
 				try {
-					Broker brokerRef = Task.getBroker();
-					Channel remote = brokerRef.connect(NAME, PORT);
-					TestMain.nb_sent = remote.write(TestMain.data_sent, 1, 5);
+					QueueBroker brokerRef = Task.getQueueBroker();
+					MessageQueue remote = brokerRef.connect(NAME, PORT);
+					remote.send(TestMain.data_sent, 0, 5);
 				} catch (DisconnectChannelException e) {
 					e.printStackTrace();
 				} catch (NotFoundBrokerException e) {
@@ -66,8 +66,8 @@ public class TestMain {
 		t1.join();
 		t2.join();
 
-		System.out.printf("Sent: %d ; Received: %d\n", TestMain.nb_sent, TestMain.nb_received);
-		for (int i = 0 ; i < 6 ; i++)
+		System.out.printf("Sent|Received:\n");
+		for (int i = 0 ; i < 5 ; i++)
 			System.out.printf("(%d) | (%d)\n", TestMain.data_sent[i], TestMain.data_received[i]);
 	}
 }

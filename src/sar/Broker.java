@@ -7,19 +7,19 @@ public class Broker {
     String name;
     HashMap<Integer, RdV> accepts;
 
-    Broker(String name) {
+    public Broker(String name) {
     	
         this.name = name;
         this.accepts = new HashMap<Integer, RdV>();
         BrokerManager.getSelf().add(this);
     }
     
-    String getName() {
+    public String getName() {
     	
     	return this.name;
     }
 
-    Channel connect(String name, int port) throws NotFoundBrokerException, IllegalStateException {
+    public Channel connect(String name, int port) throws NotFoundBrokerException, IllegalStateException {
         // Get wanted broker from BrokerManager
     	Broker remoteBroker = BrokerManager.getSelf().get(name);
     	
@@ -42,42 +42,36 @@ public class Broker {
     	return c;
     }
 
-    Channel accept(int port) {
+    public synchronized Channel accept(int port) {
         
     	if (this.accepts.containsKey(port)) {
-    		
-    		synchronized (this) {
 			
-	    		RdV r = this.accepts.get(port);
-	    		
-	    		notifyAll();
-	    		
-	    		try {
-	    			return r.join(this);
-	    		} catch (DisconnectChannelException e) {
-	    			return null;
-	    		}
+    		RdV r = this.accepts.get(port);
+    		
+    		notifyAll();
+    		
+    		try {
+    			return r.join(this);
+    		} catch (DisconnectChannelException e) {
+    			return null;
     		}
     	}
     		
     	else {
-    	
-    		synchronized (this) {
     			
-    			RdV r = new RdV(port, this);
-    			this.accepts.put(port, r);
-    			
-    			while (!r.connected()) {
-    				
-    				try {
-    					wait();
-    				} catch (InterruptedException e) {
-    					// Nothing to do here
-    				}
-    			}
-    			
-    			return r.connectChannel;
-    		}
+			RdV r = new RdV(port, this);
+			this.accepts.put(port, r);
+			
+			while (!r.connected()) {
+				
+				try {
+					wait();
+				} catch (InterruptedException e) {
+					// Nothing to do here
+				}
+			}
+			
+			return r.connectChannel;
     	}
     }
 };

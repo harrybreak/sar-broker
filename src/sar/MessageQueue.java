@@ -9,7 +9,7 @@ public class MessageQueue {
 		this.channel = c;
 	}
 	
-	public synchronized void send(byte[] bytes, int offset, int length) {
+	public void send(byte[] bytes, int offset, int length) {
 		
 		Message msg = new Message(bytes, offset, length);
 		
@@ -26,28 +26,32 @@ public class MessageQueue {
 		}
 	}
 	
-	public synchronized byte[] receive() {
+	public byte[] receive() {
 		
 		byte headerData[] = new byte[Message.HEADER_SIZE];
 		byte bodyData[];
 		int alreadyReadHeaderData = 0;
 		int alreadyReadBodyData = 0;
+		
+		synchronized (this) {
 
-		while (alreadyReadHeaderData < Message.HEADER_SIZE) {
+			while (alreadyReadHeaderData < Message.HEADER_SIZE) {
+				
+				alreadyReadHeaderData += this.channel.read(headerData,
+						alreadyReadHeaderData,
+						Message.HEADER_SIZE - alreadyReadHeaderData);
+			}
 			
-			alreadyReadHeaderData += this.channel.read(headerData,
-					alreadyReadHeaderData,
-					Message.HEADER_SIZE - alreadyReadHeaderData);
-		}
-		
-		int length = Message.getLengthFromRawData(headerData);
-		bodyData = new byte[length];
-		
-		while (alreadyReadBodyData < length) {
+			int length = Message.getLengthFromRawData(headerData);
+			bodyData = new byte[length];
 			
-			alreadyReadBodyData += this.channel.read(bodyData,
-					alreadyReadBodyData,
-					length - alreadyReadBodyData);
+			while (alreadyReadBodyData < length) {
+				
+				alreadyReadBodyData += this.channel.read(bodyData,
+						alreadyReadBodyData,
+						length - alreadyReadBodyData);
+			}
+		
 		}
 		
 		return bodyData;

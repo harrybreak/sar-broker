@@ -5,7 +5,7 @@ public class TestMain {
 	public static final int PORT = 12345;
 	public static final String NAME = "Broker";
 
-	public static byte data_received[] = null;
+	public static byte data_received[] = {9,8,7,6,0};
 	public static byte data_sent[] = {5,4,3,2,1};
 	
 	public static int nb_received = 0;
@@ -29,16 +29,16 @@ public class TestMain {
 	 */
 	public static void main(String[] args) throws InterruptedException {
 
-		QueueBroker b = new QueueBroker(NAME);
-		QueueBroker bis =new QueueBroker("a");
+		Broker b = new Broker(NAME);
+		Broker bis =new Broker("a");
 
 		Task t2 = new Task(b, new Runnable() {
 			@Override
 			public void run() {
 				try {
-					QueueBroker brokerRef = Task.getQueueBroker();
-					MessageQueue remote = brokerRef.accept(PORT);
-					TestMain.data_received = remote.receive();
+					Broker brokerRef = Task.getBroker();
+					Channel remote = brokerRef.accept(PORT);
+					TestMain.nb_received = remote.read(TestMain.data_received, 0, 5);
 				} catch (DisconnectChannelException e) {
 					e.printStackTrace();
 				}
@@ -49,9 +49,9 @@ public class TestMain {
 			@Override
 			public void run() {
 				try {
-					QueueBroker brokerRef = Task.getQueueBroker();
-					MessageQueue remote = brokerRef.connect(NAME, PORT);
-					remote.send(TestMain.data_sent, 0, 5);
+					Broker brokerRef = Task.getBroker();
+					Channel remote = brokerRef.connect(NAME, PORT);
+					TestMain.nb_sent = remote.write(TestMain.data_sent, 0, 5);
 				} catch (DisconnectChannelException e) {
 					e.printStackTrace();
 				} catch (NotFoundBrokerException e) {

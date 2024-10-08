@@ -47,10 +47,12 @@ public class TestEchoClient extends Task {
 				}
 				@Override
 				public void refused() {
+					
+					System.out.println("This is life...");
 				}
 	        }
 	        
-	        // Create one instance of the accepting listener...
+	        // Create one instance of the connecting listener...
 	        CListener l = new CListener();
 	        // ... and send it to the QueueBroker
 	        Task.getQueueBroker().connect("Server-side", TestMain.PORT, l);

@@ -7,7 +7,7 @@ public class Channel {
 	boolean dangling;
 	Channel remote;
     CircularBuffer in, out;
-    public static final int MAXSIZE = 5;
+    public static final int MAXSIZE = 64; // Leave 1 byte 
     
     
     Channel(int port) {
@@ -62,17 +62,18 @@ public class Channel {
     	
     	this.checkLConnection(); // Raises an exception if the channel is disconnected
         
-    	int i = offset;
+    	int i = offset; // 1r
     	
-		while (this.out.empty()) {
-    		
-			this.checkLConnection();
+		synchronized (this) {
 			
+			while (this.out.empty()) {
 			try {
-				wait();
+				wait(1000); // 3r
 			} catch (InterruptedException e) {
 				// Wait until first byte is available
-			}
+			}}
+			
+			this.checkLConnection(); // 2r
 		}
     	
     	synchronized (this) {
@@ -93,45 +94,50 @@ public class Channel {
     		}
     	}
     	
-    	return i - offset;
+    	return i - offset; // 4r (end)
     }
 
     public int write(byte bytes[], int offset, int length) throws DisconnectChannelException {
     	
     	this.checkLandRConnection();
         
-    	int i = offset;
+    	int i = offset; // 1w
     	
-		while (i == offset && this.in.full()) {
+		synchronized (this) {
     		
-			this.checkLandRConnection();
-    		
+			while (i == offset && this.in.full()) {
 			try {
-				wait();
+				wait(1000);
 			} catch (InterruptedException e) {
 				// Wait until last byte case is not busy anymore
-			}
+			}}
+    		
+			this.checkLandRConnection();
 		}
     	
     	synchronized (this) {
     		
     		while (i < offset + length) {
         		
-        		this.checkLandRConnection();
+        		this.checkLandRConnection(); // 2w
         		
         		if (i > offset && this.in.full()) {
-        			
+
+            		notifyAll(); // To unlock reading threads blocked due to emptiness
         			return i - offset;
         		}
         		
-        		this.in.push(bytes[i]);
-        		notifyAll(); // To unlock reading threads blocked due to emptiness
-        		
-        		i++;
+        		else {
+        			
+            		this.in.push(bytes[i]);
+            		notifyAll(); // To unlock reading threads blocked due to emptiness
+            		
+            		i++;
+        		}
     		}
     	}
     	
-    	return i - offset;
+    	return i - offset; // 3w (end)
     }
 
     public void disconnect() {

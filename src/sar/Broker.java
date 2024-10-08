@@ -70,7 +70,7 @@ public class Broker {
     			while (!r.connected()) {
     				
     				try {
-    					wait();
+    					wait(1000);
     				} catch (InterruptedException e) {
     					// Nothing to do here
     				}

@@ -56,15 +56,4 @@ This listener can send two different signals: ``connected`` and ``refused``. The
 
 ## Design
 
-
-
-interface Listener {
-void received(byte[] msg);
-void closed();
-}
-void setListener(Listener l)
-
-boolean send(byte[] bytes)
-boolean send(byte[] bytes, int offset, int length)
-void close()
-boolean closed()
+This application is based on the Broker/Channel API lastly programmed in SAR. To mimic the behavior of an event pump, each method from this application launches a new thread doing operations while the main thread is back free to the user. Once a thread finishes to process, it calls a function from the given listener, as simply as it, no need to implement an event pump?

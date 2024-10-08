@@ -17,8 +17,26 @@ public class TestEchoServer extends Task {
 	        class AListener implements QueueBroker.AcceptListener {
 				@Override
 				public void accepted(MessageQueue queue) {
+					
 					mq = queue;
 					System.out.println("I well received the connected queue");
+					
+			        class RWListener implements MessageQueue.Listener {
+						@Override
+						public void received(Message msg) {}
+						@Override
+						public void sent(Message msg) {
+							System.out.println("Message has been sent!");
+						}
+						@Override
+						public void closed() {}        	 
+			        }
+			         
+			        RWListener rwl = new RWListener();
+			         
+			        mq.setListener(rwl);
+			         
+			        mq.send(new Message(TestMain.data_sent));
 				}
 	        }
 	        
@@ -26,38 +44,13 @@ public class TestEchoServer extends Task {
 	        AListener l = new AListener();
 	        // ... and send it to the QueueBroker
 	        Task.getQueueBroker().bind(TestMain.PORT, l);
-	         
-	        // ... Process ...
-	         
-	        class RWListener implements MessageQueue.Listener {
-				@Override
-				public void received(Message msg) {}
-				@Override
-				public void sent(Message msg) {
-					System.out.println("Message has been sent!");
-				}
-				@Override
-				public void closed() {}        	 
-	        }
-	         
-	        RWListener rwl = new RWListener();
-	         
-	        mq.setListener(rwl);
-	         
-	        mq.send(new Message(TestMain.data_sent));
 		}
 	}
 	
 
 	public TestEchoServer(QueueBroker b, Runnable r) { super(b, r); }
 
-
-	public static void main(String args[]) throws InterruptedException {
-        
-		QueueBroker broker = new QueueBroker("Server-Side");
-		TestEchoServer server = new TestEchoServer(broker, new Execution());
-		
-		server.start();
-		server.join();
-    }
+	// Launch the TestEchoClient application instead
+	//
+	// public static void main(String args[]) throws InterruptedException {}
 }

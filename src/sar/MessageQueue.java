@@ -1,21 +1,36 @@
 package sar;
 
-abstract class MessageQueue {
+public class MessageQueue {
 	
 	boolean closed;
+	Channel remote;
+	
+	Listener l;
+	
+	MessageQueue(Channel c) {
+		
+		this.closed = false;
+		this.remote = c;
+		this.l = null;
+	}
+	
+	public boolean available() {
+		
+		return !(this.closed)
+			&& !(this.remote == null)
+			&& !(this.remote.disconnected());
+	}
 	
 	interface Listener {
+		
 		void received(Message msg);
 		void sent(Message msg);
 		void closed();
 	}
 	
-	Listener l;
-	
 	void setListener(Listener l) { this.l = l; }
 	
 	boolean send(Message msg) {
-		// Process ...
 		
 		this.l.sent(msg);
 		

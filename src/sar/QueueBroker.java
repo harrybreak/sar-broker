@@ -4,51 +4,17 @@ import java.util.HashMap;
 
 public class QueueBroker {
 	
-	class Mario implements Runnable {
-		
-		boolean shallRun;
-		
-		Mario() {
-			
-			this.shallRun = true;
-		}
-
-		@Override
-		public void run() {}
-		
-		void stop() {
-			
-			this.shallRun = false;
-		}
-	}
-	
-	class Bowser extends Thread {
-
-		Mario r;
-		
-		Bowser(Mario r) {
-
-			super(r);
-			this.r = r;
-		}
-		
-		void requestStop() {
-			
-			this.r.stop();
-		}
-	}
-	
 	Broker b;
 
-	HashMap<Integer, Bowser> bindingThreads;
-	HashMap<Integer, Bowser> connectingThreads;
+	HashMap<Integer, AcceptorThread> bindingThreads;
+	HashMap<Integer, ConnectorThread> connectingThreads;
 	
 	public QueueBroker(String name) {
 		
 		this.b = new Broker(name);
 		
-		this.bindingThreads = new HashMap<Integer, Bowser>();
-		this.connectingThreads = new HashMap<Integer, Bowser>();
+		this.bindingThreads = new HashMap<>();
+		this.connectingThreads = new HashMap<>();
 	}
 	
 	public String getName() {
@@ -63,15 +29,7 @@ public class QueueBroker {
 	
 	public boolean bind(int port, AcceptListener listener) {
 		
-		this.bindingThreads.put(port, new Bowser(new Mario() {
-			@Override
-			public void run() {
-				
-				Channel c = b.accept(port);
-				if (shallRun)
-					listener.accepted(new MessageQueue(c));
-			}
-		}));
+		this.bindingThreads.put(port, new AcceptorThread(new AcceptorWorker(listener, this.b, port)));
 		
 		this.bindingThreads.get(port).start();
 		
@@ -93,18 +51,7 @@ public class QueueBroker {
 	
 	public boolean connect(String name, int port, ConnectListener listener) {
 		
-		this.connectingThreads.put(port, new Bowser(new Mario() {
-			@Override
-			public void run() {
-				
-				try {
-					Channel c = b.connect(name, port);
-					listener.connected(new MessageQueue(c));
-				} catch (IllegalStateException e) {
-					listener.refused();
-				}
-			}
-		}));
+		this.connectingThreads.put(port, new ConnectorThread());
 		
 		this.connectingThreads.get(port).start();
 		

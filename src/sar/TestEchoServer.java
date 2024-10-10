@@ -29,7 +29,7 @@ public class TestEchoServer extends Task {
 							System.out.println("Message has been sent!");
 						}
 						@Override
-						public void closed() {}        	 
+						public void closed() {}	 
 			        }
 			         
 			        RWListener rwl = new RWListener();

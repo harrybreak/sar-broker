@@ -54,6 +54,8 @@ public class Broker {
     			return r.join(this);
     		} catch (DisconnectChannelException e) {
     			return null;
+    		} finally {
+    			
     		}
     	}
     		

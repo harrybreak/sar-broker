@@ -30,11 +30,11 @@ public class AcceptorWorker implements Runnable {
 			
 			Channel c = this.brokerRef.accept(port);
 			
-			if (this.shallRun) {
-				EventPump.inst().post(new AcceptorEvent());
-			} else {
-				EventPump.inst().post(new AcceptorEvent());
-			}
+			if (this.shallRun)
+				EventPump.inst().post(new AcceptorEvent(new MessageQueue(c), this.listener));
+			
+			else
+				EventPump.inst().post(new AcceptorEvent(null, this.listener));
 		}
 	}
 	

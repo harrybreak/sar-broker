@@ -19,7 +19,12 @@ public class TestEchoClient extends Task {
 				public void connected(MessageQueue queue) {
 					
 					mq = queue;
-					System.out.println("I well received the client queue!");
+					
+					if (mq != null)
+						System.out.println("I well received the client queue!");
+					
+					else
+						System.out.println("I received a null client queue...");
 					
 			        class RWListener implements MessageQueue.Listener {
 						@Override
@@ -55,7 +60,7 @@ public class TestEchoClient extends Task {
 	        // Create one instance of the connecting listener...
 	        CListener l = new CListener();
 	        // ... and send it to the QueueBroker
-	        Task.getQueueBroker().connect("Server-side", TestMain.PORT, l);
+	        Task.getQueueBroker().connect(TestMain.SERVER_NAME, TestMain.PORT, l);
 		}
 	}
 	
@@ -65,11 +70,11 @@ public class TestEchoClient extends Task {
 
 	public static void main(String args[]) throws InterruptedException {
 
-		QueueBroker serbroker = new QueueBroker("Server-Side");
+		QueueBroker serbroker = new QueueBroker(TestMain.SERVER_NAME);
 		TestEchoServer server = new TestEchoServer(serbroker,
 				new TestEchoServer.Execution());
 		
-		QueueBroker clibroker = new QueueBroker("Client-Side");
+		QueueBroker clibroker = new QueueBroker(TestMain.CLIENT_NAME);
 		TestEchoClient client = new TestEchoClient(clibroker,
 				new TestEchoClient.Execution());
 

@@ -31,8 +31,6 @@ public class QueueBroker {
 		
 		this.bindingThreads.put(port, new AcceptorThread(new AcceptorWorker(listener, this.b, port)));
 		
-		this.bindingThreads.get(port).start();
-		
 		return true;
 	}
 	
@@ -51,9 +49,7 @@ public class QueueBroker {
 	
 	public boolean connect(String name, int port, ConnectListener listener) {
 		
-		this.connectingThreads.put(port, new ConnectorThread());
-		
-		this.connectingThreads.get(port).start();
+		this.connectingThreads.put(port, new ConnectorThread(new ConnectorWorker(listener, this.b, name, port)));
 		
 		return true;
 	}

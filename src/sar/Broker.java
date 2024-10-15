@@ -46,28 +46,33 @@ public class Broker {
         
     	if (this.accepts.containsKey(port)) {
 			
-    		RdV r = this.accepts.get(port);
+    		RdV r = this.accepts.remove(port);
+    		Channel c = r.join(this);
+    		
+    		try {
+    			c = r.join(this);
+    		} catch (DisconnectChannelException e) {
+    			return null;
+    		}
     		
     		notifyAll();
     		
-    		try {
-    			return r.join(this);
-    		} catch (DisconnectChannelException e) {
-    			return null;
-    		} finally {
-    			
-    		}
+    		return c;
     	}
     		
     	else {
     			
 			RdV r = new RdV(port, this);
+			
+			if (this.accepts.get(port) != null)
+				throw new IllegalStateException("Port " + port + "already listening!");
+			
 			this.accepts.put(port, r);
 			
 			while (!r.connected()) {
 				
 				try {
-					wait(1000);
+					wait(500);
 				} catch (InterruptedException e) {
 					// Nothing to do here
 				}
@@ -77,4 +82,3 @@ public class Broker {
     	}
     }
 };
-

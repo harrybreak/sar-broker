@@ -8,9 +8,32 @@ public class Message {
 	
 	public Message(byte[] data) {
 		
-		this.data = data;
+		this.data = data.clone();
 		this.length = data.length;
 		this.offset = 0;
+	}
+	
+	public Message(byte[] data, int offset) {
+		
+		this.data = data.clone();
+		this.length = data.length;
+		this.offset = offset;
+	}
+	
+	public Message(byte[] data, int offset, int length) {
+		
+		this.data = data.clone();
+		this.length = length;
+		this.offset = length;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		
+		return (o instanceof Message)
+			&& (this.length  ==  ((Message) o).length)
+			&& (this.offset  ==  ((Message) o).offset)
+			&& (this.data.equals(((Message) o).data ));
 	}
 	
 	public int size() {
@@ -18,18 +41,8 @@ public class Message {
 		return this.length;
 	}
 	
-	public void seek(int offset) {
-		
-		this.offset = offset;
-	}
-	
-	public byte at(int offset) {
+	public byte at(int index) {
 		
 		return this.data[offset];
-	}
-	
-	public byte get() {
-		
-		return this.data[this.offset];
 	}
 }

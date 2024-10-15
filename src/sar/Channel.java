@@ -68,15 +68,12 @@ public class Channel {
 			
 			while (this.out.empty()) {
 			try {
-				wait(1000); // 3r
+				wait(500); // 3r
 			} catch (InterruptedException e) {
 				// Wait until first byte is available
 			}}
 			
 			this.checkLConnection(); // 2r
-		}
-    	
-    	synchronized (this) {
     		
     		while (i < offset + length) {
     			
@@ -107,15 +104,12 @@ public class Channel {
     		
 			while (i == offset && this.in.full()) {
 			try {
-				wait(1000);
+				wait(500);
 			} catch (InterruptedException e) {
 				// Wait until last byte case is not busy anymore
 			}}
     		
 			this.checkLandRConnection();
-		}
-    	
-    	synchronized (this) {
     		
     		while (i < offset + length) {
         		

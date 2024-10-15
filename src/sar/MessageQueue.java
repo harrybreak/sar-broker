@@ -37,6 +37,11 @@ public class MessageQueue {
 		return false;
 	}
 	
+	Message receive() {
+		
+		return null;
+	}
+	
 	void close() {}
 	boolean closed() { return this.closed; }
 }

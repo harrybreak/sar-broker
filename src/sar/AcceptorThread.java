@@ -15,6 +15,7 @@ public class AcceptorThread extends Thread {
 
 		super(r);
 		this.r = r;
+		super.start();
 	}
 	
 	public void requestStop() {

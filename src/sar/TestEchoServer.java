@@ -19,7 +19,12 @@ public class TestEchoServer extends Task {
 				public void accepted(MessageQueue queue) {
 					
 					mq = queue;
-					System.out.println("I well received the connected queue");
+					
+					if (mq != null)
+						System.out.println("I well received the server queue!");
+					
+					else
+						System.out.println("I received a null server queue...");
 					
 			        class RWListener implements MessageQueue.Listener {
 						@Override

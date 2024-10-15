@@ -3,7 +3,9 @@ package sar;
 public class TestMain {
 
 	public static final int PORT = 12345;
-	public static final String NAME = "Broker";
+	
+	public static final String SERVER_NAME = "Server-Side";
+	public static final String CLIENT_NAME = "Client-Side";
 
 	public static byte data_received[] = {0,0,0,0,0,0};
 	public static byte data_sent[] = {5,4,3,2,1,0};

@@ -29,6 +29,20 @@ public class TestMain {
 	 * 
 	 * - Last five bytes from ``data_sent`` array are sent into last five memory spaces of ``data_received`` in the same order.
 	 */
-	public static void main(String[] args) throws InterruptedException {
-	}
+	public static void main(String args[]) throws InterruptedException {
+
+		QueueBroker serbroker = new QueueBroker(TestMain.SERVER_NAME);
+		TestEchoServer server = new TestEchoServer(serbroker,
+				new TestEchoServer.Execution());
+		
+		QueueBroker clibroker = new QueueBroker(TestMain.CLIENT_NAME);
+		TestEchoClient client = new TestEchoClient(clibroker,
+				new TestEchoClient.Execution());
+
+		server.start();
+		client.start();
+
+		server.join();
+		client.join();
+    }
 }

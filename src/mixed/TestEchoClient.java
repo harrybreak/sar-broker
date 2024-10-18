@@ -66,22 +66,4 @@ public class TestEchoClient extends Task {
 	
 
 	public TestEchoClient(QueueBroker b, Runnable r) { super(b, r); }
-
-
-	public static void main(String args[]) throws InterruptedException {
-
-		QueueBroker serbroker = new QueueBroker(TestMain.SERVER_NAME);
-		TestEchoServer server = new TestEchoServer(serbroker,
-				new TestEchoServer.Execution());
-		
-		QueueBroker clibroker = new QueueBroker(TestMain.CLIENT_NAME);
-		TestEchoClient client = new TestEchoClient(clibroker,
-				new TestEchoClient.Execution());
-
-		server.start();
-		client.start();
-
-		server.join();
-		client.join();
-    }
 }

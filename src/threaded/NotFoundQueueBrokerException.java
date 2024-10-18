@@ -1,4 +1,4 @@
-package sar;
+package threaded;
 
 public class NotFoundQueueBrokerException extends IllegalStateException {
 

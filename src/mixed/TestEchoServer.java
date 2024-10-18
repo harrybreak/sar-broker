@@ -54,8 +54,4 @@ public class TestEchoServer extends Task {
 	
 
 	public TestEchoServer(QueueBroker b, Runnable r) { super(b, r); }
-
-	// Launch the TestEchoClient application instead
-	//
-	// public static void main(String args[]) throws InterruptedException {}
 }

@@ -38,6 +38,6 @@ public class AcceptEvent implements Runnable {
 			EventPump.inst().post(this);
 		
 		else
-			System.out.println("Port " + this.port + " is no longer listening!");
+			System.out.println("[WARN][SERVER] Broker " + this.broker.name + " with Port " + this.port + " is no longer listening!");
 	}
 }

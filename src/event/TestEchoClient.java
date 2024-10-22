@@ -8,13 +8,35 @@ public class TestEchoClient implements Runnable {
 		@Override
 		public void connected(Channel c) {
 			
-			System.out.println("I well received the client-side channel!");
+			System.out.println("[INFO][CLIENT] Channel well received");
+			
+			class ClientListener implements Channel.RWListener {
+				@Override
+				public void received(byte[] msg) {
+					
+					System.out.println("[INFO][CLIENT] Message received of length " + msg.length);
+				}
+				@Override
+				public void sent(int number) {
+
+					System.out.println("[INFO][CLIENT] Successfully sent " + number + " bytes");
+				}
+				@Override
+				public void closed() {
+
+					System.out.println("[INFO][CLIENT] Connection closed");
+				}
+			}
+			
+			c.setListener(new ClientListener());
+			
+			c.send(TestEchoMain.message1);
 		}
 
 		@Override
 		public void refused() {
 			
-			System.out.println("The reception of the client-side channel has been refused...");
+			System.out.println("[ERROR][CLIENT] The reception of the channel has been refused...");
 		}
 	}
 	

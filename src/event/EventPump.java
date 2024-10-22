@@ -28,7 +28,7 @@ public class EventPump extends Thread {
 				synchronized (this) {
 
 					Runnable next = queue.remove();
-					System.out.println("Running next event of " + next.getClass().getName());
+					System.out.println("[INFO][EXECOR] Running next event of " + next.getClass().getName());
 					next.run();
 				}
 			}
@@ -58,7 +58,7 @@ public class EventPump extends Thread {
 	public synchronized void post(Runnable r) {
 		
 		this.queue.add(r); // at the end…
-		System.out.println("Queue is now " + this.queue.size() + " events long.");
+		System.out.println("[INFO][EXECOR] Queue is now " + this.queue.size() + " events long.");
 		notify();
 	}
 }

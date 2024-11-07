@@ -36,9 +36,9 @@ Before calling this function, it is necessary to create a class that implements 
 
 Once the connection has been established, two channels are provided: one in the ``accepted`` event from the ``Broker.AcceptListener`` listener and one in the ``connected`` event from the ``Broker.ConnectListener`` listener. In both case, you must create a class that implements ``Channel.RWListener`` and its events:
 
-- ``void received(byte[] msg);``: invoked when you have receive some bytes. ``msg`` containes those received bytes from the remote channel. You have a total ownership on this array.
-
-- ``void sent(int number);`` invoked when your sending event has succeed to send a certain amount of bytes. ``number`` is this amount.
+- ``void received(byte[] frame);``: invoked when you have receive some bytes. ``frame`` containes those received bytes from the remote channel. You have a total ownership on this array.
+ 
+- ``void sent(byte[] frame);`` invoked when your sending event has succeed to send a certain amount of bytes. ``frame`` contains those bytes and you have total ownership on this array.
 
 - ``void closed();`` invoked when your channel or the remote channel has requested to disconnect via ``void Channel::disconnect()``.
 
@@ -56,6 +56,16 @@ You must provide a listener that implements ``Channel.RWListener`` to be able to
 
 This method tells the channel's sending event to send those ``bytes`` to the remote channel as soon as possible. It is not blocking and it releases total ownership of the array as soon as it is called. When the user attempts to send nothing, a ``null`` array or an empty array, the method detects it and does nothing else aftermath. However, when the user attempts to send bytes while the channel is being disconnected, it raises an ``IllegalStateException``.
 
+### Establish a safe connection to prevent data from being lost
+
+Instead of using ``Broker`` and ``Channel`` to establish a connection, you can use **on both sides** ``QueueBroker`` and ``MessageQueue``. ``QueueBroker`` has the same methods than ``Broker`` and ``MessageQueue`` has the same methods than ``Channel`` except that both events ``QueueBroker.AcceptListener::accepted`` and ``QueueBroker.ConnectListener::connected`` provide a ``MessageQueue`` instead of a ``Channel``. What is particular with ``MessageQueue`` is that data frames are sent and received only once and entire, and it is still FIFO and lossless. This protocol is safer but can be slower than the ``Channel``'s protocol because ``MessageQueue`` stores the messages frames by frames sent by the ``Channel`` until the message is completed and can be sent to the user. ``MessageQueue`` and ``QueueBroker`` are respectively based on ``Channel`` et ``Broker``.
+
+### Disconnection
+
+One of both sides can close the connection on channel via the method:
+
+- ``void Channel::disconnect();``
+
 ### Test this API
 
 ``TestEchoMain.java`` is the main test program of this API. You can launch or debug this application to see how ``TestEchoServer`` exchanges various types of byte arrays with ``TestEchoClient``.
@@ -69,3 +79,11 @@ There is an unique thread, launched by the singleton ``EventPump``, that stores 
 ### Auto-calling events
 
 Two types of event, ``SendEvent`` and ``AcceptEvent``, post themselves once they finish the processus while they have not been told to stop (respectively by calling ``Channel::disconnect`` or ``Broker::unbind``).
+
+### Almost every action is an event
+
+All those operations are events executed by the event pump: ``connect``, ``bind``, ``send`` and ``setListener``. This last one is processed as an event to prevent a frame from being cut in half while being sending to the last listener.
+
+However, ``Broker::unbind`` is not processed as an event because this is not required. ``Broker::unbind`` only switch ``AcceptEvent::shallRun`` off, which tells the next incoming ``AcceptEvent`` executed by the event pump to not put again itself in the event pump to accept other channels on its port. In this case, it is clear that ``Broker::unbind`` better directly executes user-side instead of waiting being processed by the event pump.
+
+As mentioned above, once the method ``Broker::unbind`` has been called, it is still possible to accept one channel before the accepting loop ends on this port. However, this last channel would be either ``null`` or marked as disconnected or dangling, so it is always a good practice to test this in every ``accepted`` and ``connected`` event.

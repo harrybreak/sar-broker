@@ -3,10 +3,10 @@ package event;
 import java.util.Queue;
 import java.util.LinkedList;
 
-class SendEvent implements Runnable {
+class WritingEvent implements Runnable {
 	
 	boolean shallRun;
-	boolean alive;
+	boolean onWork;
 	
 	Channel.RWListener writing_listener;
 	Channel.RWListener reading_listener;
@@ -19,10 +19,10 @@ class SendEvent implements Runnable {
     // To prevent a writing event to overload the event pump
     public static final int MAXFRAME = 1500;
 	
-	SendEvent() {
+	WritingEvent() {
 		
 		this.shallRun = true;
-		this.alive = true;
+		this.onWork = false;
 		
 		this.writing_listener = null;
 		this.reading_listener = null;
@@ -48,43 +48,42 @@ class SendEvent implements Runnable {
 		this.shallRun = false;
 	}
 	
-	public boolean isAlive() {
-		
-		return this.alive;
-	}
-	
-	void push(byte[] new_data) throws IllegalStateException {
+	boolean push(byte[] new_data) {
+    	
+    	if (!this.shallRun)
+    		return false;
 		
     	this.messageQueue.add(new_data);
     	
-    	if (!this.shallRun)
-    		throw new IllegalStateException("Write Event has been stopped.");
-    	
-    	if (this.current == null)
+    	if (!this.onWork) {
+    		
+    		this.onWork = true;
     		EventPump.inst().post(this);
+    	}
+    	
+    	return true;
 	}
 
 	@Override
 	public void run() {
 		
-		if (!this.shallRun && this.alive) {
+		if (!this.shallRun) {
 			
 			this.reading_listener.closed();
 			this.writing_listener.closed();
-			
-			this.alive = false; // Death of the event due to the death of the channel
 		}
 		
 		if (this.messageQueue.peek() != null) {
 			
+			// Temporarly set the "sent" variable to the current position in the current message
 			this.sent = this.offset;
 			
 			// This array is re-created as a passthrough for leaving total ownership to the user
 			// when it receives the message.
-			this.current = new byte[SendEvent.MAXFRAME];
+			this.current = new byte[WritingEvent.MAXFRAME];
 
 			while (this.offset < this.messageQueue.peek().length
-				&& this.offset - this.sent < SendEvent.MAXFRAME)
+				&& this.offset - this.sent < WritingEvent.MAXFRAME)
 				
 				this.current[this.offset - this.sent] = this.messageQueue.peek()[this.offset++];
 			
@@ -93,21 +92,24 @@ class SendEvent implements Runnable {
 			
 			// Permit ownership to user who receives this message
 			byte to_send[] = new byte[this.sent];
-			for (int i = 0 ; i < this.sent ; i++)
-				to_send[i] = this.current[i];
+			System.arraycopy(this.current, 0, to_send, 0, this.sent);
 			
-			// Call on listeners
-			this.writing_listener.sent(this.sent);
-			this.reading_listener.received(to_send);
+			// Call on listeners and send them clones
+			// to give full ownership of bytes to the user
+			this.writing_listener.sent(to_send.clone());
+			this.reading_listener.received(to_send.clone());
 			
 			if (this.offset == this.messageQueue.peek().length) {
-				// Everything has been sent, we must flush the current data buffer
-				this.current = this.messageQueue.poll();
+				// Everything has been sent, we must reset the current offset
+				// and remove the peeking message from the queue.
 				this.offset = 0;
+				this.messageQueue.remove();
 			}
 			
 			// Start again to send next bytes
 			EventPump.inst().post(this);
 		}
+		
+		else this.onWork = false;
 	}
 }

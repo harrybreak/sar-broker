@@ -1,6 +1,6 @@
 package event;
 
-public class TestEchoMain {
+public class TestMain {
 	
 	public final static int PORT = 14848;
 	public final static String SERVER_NAME = "Server-Side";
@@ -12,8 +12,12 @@ public class TestEchoMain {
 
 	public static void main(String[] args) throws InterruptedException {
 
-		Thread server = new Thread(new TestEchoServer());
-		Thread client = new Thread(new TestEchoClient());
+		// true --> use a QueueBroker
+		// false -> use a Broker
+		boolean useAQueueBroker = false;
+		
+		Thread server = new Thread(new TestServer(useAQueueBroker));
+		Thread client = new Thread(new TestClient(useAQueueBroker));
 		
 		server.start();
 		client.start();

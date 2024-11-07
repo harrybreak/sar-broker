@@ -18,20 +18,35 @@ public class ConnectEvent implements Runnable {
 	@Override
 	public void run() {
 		
+		Broker remote;
+		
 		try {
 
-			Broker remote = BrokerManager.getSelf().get(this.name);
+			remote = BrokerManager.getSelf().get(this.name);
+		
+		} catch (NullPointerException e) { // This broker name is not known by the universe
+			
+			this.listener.refused();
+			return;
+		}
+		
+		try {
 			
 			RdV r = remote.listening.get(this.port).getRdV();
+			
+			if (r.closed) { // The other side closed this accepting event, so it is refused
+				
+				this.listener.refused();
+				return;
+			}
 			
 			Channel c = r.join(this.broker, this.port);
 			
 			this.listener.connected(c);
 			
-		} catch (NullPointerException e) {
+		} catch (NullPointerException e) { // Still not created an accepting event from the other side
 			
 			EventPump.inst().post(this);
 		}
-		
 	}
 }

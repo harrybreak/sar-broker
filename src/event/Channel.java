@@ -4,13 +4,13 @@ public class Channel {
     
     public interface RWListener {
         
-        void received(byte[] msg);
-        void sent(int number);
+        void received(byte[] frame);
+        void sent(byte[] frame);
         void closed();
     }
 
     
-    SendEvent writing;
+    WritingEvent writing;
     
     int port;
     
@@ -22,7 +22,7 @@ public class Channel {
     
     Channel(int port) {
         
-        this.writing = new SendEvent();
+        this.writing = new WritingEvent();
         EventPump.inst().post(this.writing);
         
         this.port = port;
@@ -34,16 +34,23 @@ public class Channel {
     }
 
     public void disconnect() {
-        
-        // Both (event-level)
-        this.writing.requestStop();
-        
-        // Remote
-        this.remote.dangling = true;
-        
-        // Local
-        this.disconnected = true;
-        this.dangling = true;
+    	
+    	EventPump.inst().post(new Runnable() {
+
+			@Override
+			public void run() {
+
+		        // Both (event-level)
+		        writing.requestStop();
+		        
+		        // Remote
+		        remote.dangling = true;
+		        
+		        // Local
+		        disconnected = true;
+		        dangling = true;
+			}
+    	});
     }
     
     public boolean disconnected() {
@@ -59,6 +66,7 @@ public class Channel {
     void plug(Channel c) throws IllegalStateException {
         
         if (c.disconnected())
+        	// This shalls never occur
             throw new IllegalStateException("Channel cannot be plugged to a disconnected channel!");
         
         this.remote = c;
@@ -70,9 +78,16 @@ public class Channel {
     }
     
     public void setListener(RWListener l) {
-        
-        this.writing.setWritingListener(l);
-        this.remote.writing.setReadingListener(l);
+    	
+    	EventPump.inst().post(new Runnable() {
+
+			@Override
+			public void run() {
+		        
+		        writing.setWritingListener(l);
+		        remote.writing.setReadingListener(l);
+			}
+    	});
     }
     
     /**
@@ -96,10 +111,15 @@ public class Channel {
             return; // Nothing happens when an empty message is sent.
         
         byte[] data = new byte[length];
+        System.arraycopy(bytes, offset, data, 0, length);
         
-        for (int i = 0 ; i < length ; i++)
-            data[i] = bytes[i+offset];
-        
-        this.writing.push(data);
+        EventPump.inst().post(new Runnable() {
+
+			@Override
+			public void run() {
+
+		        writing.push(data);
+			}
+        });
     }
 }

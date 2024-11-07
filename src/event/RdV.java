@@ -2,6 +2,7 @@ package event;
 
 public class RdV {
 	
+	boolean closed;
 	int port;
 	Broker acceptingBroker;
 	Broker connectingBroker;
@@ -13,14 +14,15 @@ public class RdV {
 		this.connectingBroker = b;
 		this.acceptingBroker = null;
 		this.listener = l;
+		this.closed = false;
 	}
 	
 	Channel join(Broker b, int port) {
 		
 		this.acceptingBroker = b;
 		
-		Channel left  = new Channel(port);
-		Channel right = new Channel(port);
+		Channel left  = (this.closed) ? null : new Channel(port);
+		Channel right = (this.closed) ? null : new Channel(port);
 		
 		left.plug(right);
 		

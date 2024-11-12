@@ -1,148 +1,101 @@
 package mixed;
 
+import java.io.IOException;
+
 public class Channel {
+  
+  CircularBuffer in;
+  CircularBuffer out;
+  Channel rch;
+  public Boolean disconnected;
 
-	int port;
-	boolean disconnected;
-	boolean dangling;
-	Channel remote;
-    CircularBuffer in, out;
-    public static final int MAXSIZE = 64; // Leave 1 byte 
-    
-    
-    Channel(int port) {
-    	
-    	this.port = port;
-    	this.disconnected = false;
-    	this.dangling = true; // Set to true unless remote channel is no longer null
-    	this.in = new CircularBuffer(MAXSIZE);
-    	this.out = null;
-    	this.remote = null;
-    	
+  public static final int CAPACITY = 5;
+
+  Channel (CircularBuffer circularBufferIN, CircularBuffer circularBufferOUT){
+    in = circularBufferIN;
+    out = circularBufferOUT;
+  };
+
+  public void addRemote(Channel remote){
+    rch = remote;
+    disconnected = false;
+  }
+
+  public int read(byte[] bytes, int offset, int length) throws IOException{
+    if (disconnected){
+      throw new IOException("channel is disconnected");
     }
-    
-    
-    void checkLandRConnection() throws DisconnectChannelException {
-    	
-    	if (this.disconnected) {
-    		
-    		throw new DisconnectChannelException("Current channel is disconnected!");
-    	}
-    	
-		if (this.dangling || this.remote.disconnected) {
-			
-			throw new DisconnectChannelException("Remote channel is disconnected!");
-		}
-    }
-    
-    
-    void checkLConnection() throws DisconnectChannelException {
-    	
-    	if (this.disconnected) {
-    		
-    		throw new DisconnectChannelException("Current channel is disconnected!");
-    	}
-    }
-    
-    void plug(Channel c) throws DisconnectChannelException {
-    	
-    	if (c.disconnected()) {
-    		// This shall never occur
-    		throw new DisconnectChannelException("Channel cannot be plugged to a disconnected channel!");
-    	}
-    	
-    	this.remote = c;
-    	this.out = c.in;
-    	
-    	this.dangling = false;
-    	
+    else if (rch.disconnected){
+      throw new IOException("channel is dangling");
     }
 
-    public int read(byte bytes[], int offset, int length) throws DisconnectChannelException {
-    	
-    	this.checkLConnection(); // Raises an exception if the channel is disconnected
-        
-    	int i = offset; // 1r
-    	
-		synchronized (this) {
-			
-			while (this.out.empty()) {
-			try {
-				wait(500); // 3r
-			} catch (InterruptedException e) {
-				// Wait until first byte is available
-			}}
-			
-			this.checkLConnection(); // 2r
-    		
-    		while (i < offset + length) {
-    			
-    			this.checkLConnection();
-    			
-        		if (i > offset && this.out.empty()) {
-        			
-        			return i - offset;
-        		}
-        		
-        		bytes[i] = this.out.pull();
-        		notifyAll(); // To unlock writing threads blocked due to willfulness
-        		
-        		i++;
-    		}
-    	}
-    	
-    	return i - offset; // 4r (end)
+    synchronized (this) {
+      if (out.empty()){
+
+        //System.out.println("reading, Waiting");
+        try{wait(1000);}catch(InterruptedException e){};
+      }
     }
 
-    public int write(byte bytes[], int offset, int length) throws DisconnectChannelException {
-    	
-    	this.checkLandRConnection();
-        
-    	int i = offset; // 1w
-    	
-		synchronized (this) {
-    		
-			while (i == offset && this.in.full()) {
-			try {
-				wait(500);
-			} catch (InterruptedException e) {
-				// Wait until last byte case is not busy anymore
-			}}
-    		
-			this.checkLandRConnection();
-    		
-    		while (i < offset + length) {
-        		
-        		this.checkLandRConnection(); // 2w
-        		
-        		if (i > offset && this.in.full()) {
+    int i = offset;
+    synchronized (this){
+      while( i < length) { 
+        try{
+            bytes[i] = out.pull();
+            notifyAll();
+            // byte[] letter = {bytes[i]};
+            // System.out.println("reading" + i + new String(letter, StandardCharsets.UTF_8));
+            i += 1;
+        } catch (IllegalStateException e) {
+            notifyAll();
+            // System.out.println("reading exception " + (i - offset) + " " + length + " " + Thread.currentThread().getName());
+            return i - offset;
+        }
+      }
+    }            
+    // System.out.println("reading done " + (i - offset) + " " + length + " " + Thread.currentThread().getName());
+    return i - offset;
+  };
 
-            		notifyAll(); // To unlock reading threads blocked due to emptiness
-        			return i - offset;
-        		}
-        		
-        		else {
-        			
-            		this.in.push(bytes[i]);
-            		notifyAll(); // To unlock reading threads blocked due to emptiness
-            		
-            		i++;
-        		}
-    		}
-    	}
-    	
-    	return i - offset; // 3w (end)
+  public int write(byte[] bytes, int offset, int length) throws IOException {
+    if (disconnected){
+      throw new IOException("channel is disconnected");
+    }
+    else if (rch.disconnected){
+      throw new IOException("channel is dangling");
+    }
+    synchronized (this) {
+      if (in.full()){
+        // System.out.println("writing, Waiting");
+        try{wait(1000);}catch(InterruptedException e){};
+      }
     }
 
-    public void disconnect() {
-    	
-    	this.remote.dangling = true;
-    	this.disconnected = true;
-    	this.dangling = true;
+    int i = offset;
+    synchronized (this){
+      while(i < length) { 
+        try{
+          in.push(bytes[i]);
+          notifyAll();
+          // byte[] letter = {bytes[offset + i]};
+          // System.out.println("writing" + i + new String(letter, StandardCharsets.UTF_8));
+          i += 1;
+        } catch (IllegalStateException e) {
+            // System.out.println("writing " + new String(bytes, StandardCharsets.UTF_8)+ " " + (i - offset) + " " + length + Thread.currentThread().getName());
+            notifyAll();
+            return i - offset;
+        }
+      }
     }
-    
-    public boolean disconnected() {
-    	
-    	return this.disconnected;
-    }
+    // System.out.println("writing done " + (i - offset) + " " + length + " " + Thread.currentThread().getName());
+    return i;
+
+
+  };
+  
+  public void disconnect(){
+    disconnected = true;
+    rch = null;
+  };
+
 }

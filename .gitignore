@@ -9,6 +9,7 @@ bin/
 *.pdf
 !README.pdf
 *.png
+!src/mixed/DESIGN.png
 *.gif
 *.3gp
 *.dat

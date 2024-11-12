@@ -1,43 +1,22 @@
 package mixed;
-
 public class Task extends Thread {
-	
-	QueueBroker qbRef;
-    Broker brokerRef;
-    
-    Runnable exeCore;
-    
-    @Override
-    public void run() { this.exeCore.run(); }
-    
-    public Task(Broker b, Runnable r) {
-    	
-        this.brokerRef = b;
-        this.qbRef = null;
-        
-        this.exeCore = r;
-    }
-    
-    public Task(QueueBroker qb, Runnable r) {
-    	
-    	this.brokerRef = qb.b;
-    	this.qbRef = qb;
-    	
-    	this.exeCore = r;
-    }
-    
-    synchronized public static Task getTask() {
-    	
-    	return (Task)Thread.currentThread();
-    }
 
-    synchronized public static Broker getBroker() {
-    	
-        return ((Task)(Thread.currentThread())).brokerRef;
-    }
-    
-    synchronized public static QueueBroker getQueueBroker() {
-    	
-    	return ((Task)(Thread.currentThread())).qbRef;
-    }
+  Broker broker;
+  Runnable runnable;
+
+  public Task(Broker b, Runnable r){
+    broker = b;
+    runnable = r;
+  };
+
+  @Override
+  public void run(){
+    this.runnable.run();
+  }
+
+  public static Broker getBroker(){
+    var currentThread = Thread.currentThread();
+    return ((Task) currentThread).broker;
+  }
+
 }
